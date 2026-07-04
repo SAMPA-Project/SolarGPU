@@ -1,5 +1,11 @@
 # SolarGPU
 
+This implementation is supplementary material for the paper *GPU-based solar irradiance estimation over Digital Surface Models using structurally lossless viewshed compression* by Niko Lukač and Borut Žalik, University of Maribor. Submitted to *Computers & Geosciences* (July 2026).
+
+**Version: 1.0**
+
+## Description
+
 GPU-accelerated annual solar irradiance estimation pipeline over a digital surface model (DSM), with shadowing, diffuse, direct and reflective irradiance. This implementation supports a compact "ba-RLE" compressed representation for the viewshed neighbor lists that the reflection pass streams through each time step.
 
 Given a GeoTIFF of DSM heightmap, the pipeline:
@@ -41,7 +47,6 @@ cmake --build . -j
 
 ## Outputs
 
-- `<file>_solar_uncompressed.tiff`, `<file>_solar_compressed.tiff`: 
-  annual irradiance from each pipeline instance
-- `voxels_uncompressed.bin`, `voxels_compressed.bin`: per-voxel
-  (grid_x, grid_y, z, annual_irradiance) point dumps.
+- `<file>_solar_potential.tiff`: annual irradiance raster
+- `<file>_voxels.bin`: per-voxel (grid_x, grid_y, z, annual_irradiance)
+  point dump

@@ -1,6 +1,6 @@
 # SolarGPU
 
-This implementation is supplementary material for the paper *GPU-based solar irradiance estimation over Digital Surface Models using structurally lossless viewshed compression* by Niko Lukač and Borut Žalik, University of Maribor. Submitted to *Computers & Geosciences* (July 2026).
+This implementation is supplementary material for the paper *GPU-based solar irradiance estimation over Digital Surface Models using structurally lossless viewshed compression* by Niko Lukač and Borut Žalik, University of Maribor. 
 
 **Version: 1.0**
 

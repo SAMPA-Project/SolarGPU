@@ -13,6 +13,7 @@ __constant__ unsigned int hsize, vsize;
 __constant__ float        hres;
 __constant__ float        vres;
 __constant__ float        maxz;
+__constant__ float        voxel_size;
 __constant__ float F_matrix[6][8];
 
 __device__ float2 sun_azm_alt[solar_gpu::kHoursPerYear];
@@ -23,7 +24,7 @@ __device__ float  diffuse_ir[solar_gpu::kHoursPerYear];
 namespace solar_gpu {
 
 void upload_pipeline_constants(int h_grid_width, int h_grid_height, int h_num_top, int h_num_total,
-                                float h_max_height, const SkyBins& bins,
+                                float h_max_height, float h_voxel_size, const SkyBins& bins,
                                 const std::vector<float>& direct_irradiance,
                                 const std::vector<float>& diffuse_irradiance) {
     unsigned int h_num_data = (unsigned int)h_num_total;
@@ -37,6 +38,7 @@ void upload_pipeline_constants(int h_grid_width, int h_grid_height, int h_num_to
     cudaSafeCall(cudaMemcpyToSymbol(hres, &bins.h_hres, sizeof(float)));
     cudaSafeCall(cudaMemcpyToSymbol(vres, &bins.h_vres, sizeof(float)));
     cudaSafeCall(cudaMemcpyToSymbol(maxz, &h_max_height, sizeof(float)));
+    cudaSafeCall(cudaMemcpyToSymbol(voxel_size, &h_voxel_size, sizeof(float)));
 
     std::vector<float2> sun_azm_alt_h(kHoursPerYear);
     for (int k = 0; k < kHoursPerYear; ++k)

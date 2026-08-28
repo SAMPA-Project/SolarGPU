@@ -6,25 +6,30 @@
 namespace {
 
 /* Diffuse inter-reflection contribution from one neighbor voxel (identified
-   by its linear grid index `ngid`) toward the receiving voxel described by
-   (my_gx, my_gy, my_z) and surface normal (nvx, nvy, nvz). Shared by both
-   neighbor-storage variants below - only how `ngid` is obtained differs.
+   by its *global* voxel id `ngid` - top or wall) toward the receiving voxel
+   described by (my_gx, my_gy, my_z) and surface normal (nvx, nvy, nvz).
+   Shared by both neighbor-storage variants below - only how `ngid` is
+   obtained differs.
 
-   A neighbor found by the viewshed ray tracer is always a plain grid cell
-   (never a wall voxel), so once it passes the in-bounds check below, its
-   hourly irradiance sits at hourly_data[n_gy * grid_width + n_gx] directly
-   - top voxels are exactly the grid's cells, in raster order, with no
-   separate windowing/offset to account for. */
+   hourly_data, slopes, and aspects are all indexed by global voxel id, so
+   a wall emitter's own lit irradiance and facade normal are used directly;
+   its planar position comes from its parent top pixel and its height from
+   wall_z. */
 __device__ __forceinline__ void accumulate_reflection(
     int ngid, int my_gx, int my_gy, float my_z,
     float nvx, float nvy, float nvz,
     const float* __restrict__ grid, const float* __restrict__ hourly_data,
+    const int* __restrict__ pix_parent, const float* __restrict__ wall_z,
+    const float* __restrict__ slopes, const float* __restrict__ aspects,
     float& R)
 {
-    if (ngid < 0 || ngid >= grid_width * grid_height) return;
+    if (ngid < 0 || (unsigned int)ngid >= num_data) return;
 
-    int n_gx = ngid % grid_width, n_gy = ngid / grid_width;
-    float dx = (float)(n_gx - my_gx), dy = (float)(n_gy - my_gy), dz = grid[ngid] - my_z;
+    int n_top = pix_parent[ngid];
+    int n_gx = n_top % grid_width, n_gy = n_top / grid_width;
+    float n_z = (ngid < num_top) ? grid[n_top] : wall_z[ngid - num_top];
+
+    float dx = (float)(n_gx - my_gx), dy = (float)(n_gy - my_gy), dz = n_z - my_z;
     float dist2 = dx * dx + dy * dy + dz * dz;
     if (dist2 < 1e-4f) return;
     float dist = sqrtf(dist2);
@@ -32,9 +37,16 @@ __device__ __forceinline__ void accumulate_reflection(
     float cos_recv = (nvx * dx + nvy * dy + nvz * dz) / dist;
     if (cos_recv <= 0.0f) return;
 
-    float cos_send = fmaxf(fabsf(-dz) / dist, 0.1f);
+    float s_slope = slopes[ngid], s_aspect = aspects[ngid];
+    float s_sin = sinf(s_slope);
+    float nsx = s_sin * sinf(s_aspect);
+    float nsy = -s_sin * cosf(s_aspect);
+    float nsz = cosf(s_slope);
 
-    R += solar_gpu::kAlbedo * hourly_data[n_gy * grid_width + n_gx] * cos_recv * cos_send / (3.14159265f * dist2);
+    float cos_send = -(nsx * dx + nsy * dy + nsz * dz) / dist;
+    if (cos_send <= 0.0f) return;
+
+    R += solar_gpu::kAlbedo * hourly_data[ngid] * cos_recv * cos_send / (3.14159265f * dist2);
 }
 
 /* Common per-voxel setup: this voxel's grid position/height and the surface
@@ -83,7 +95,7 @@ __global__ void calc_kernel_reflection_csr(
     int start = nb_offsets[t_id];
     int end = nb_offsets[t_id + 1];
     for (int k = start; k < end; ++k) {
-        accumulate_reflection(nb_flat[k] - 1, me.gx, me.gy, me.z, me.nvx, me.nvy, me.nvz, grid, hourly_data, R);
+        accumulate_reflection(nb_flat[k] - 1, me.gx, me.gy, me.z, me.nvx, me.nvy, me.nvz, grid, hourly_data, pix_parent, wall_z, slopes, aspects, R);
     }
     reflected_out[t_id] = R;
 }
@@ -157,13 +169,13 @@ __global__ void calc_kernel_reflection_compressed(
                     unsigned int val = first ? high : (prev_val - high);
                     first = false;
                     prev_val = val;
-                    if (val > 0) accumulate_reflection((int)val - 1, me.gx, me.gy, me.z, me.nvx, me.nvy, me.nvz, grid, hourly_data, R);
+                    if (val > 0) accumulate_reflection((int)val - 1, me.gx, me.gy, me.z, me.nvx, me.nvy, me.nvz, grid, hourly_data, pix_parent, wall_z, slopes, aspects, R);
                     ++i;
                     if (i < runLen) {
                         unsigned int low = packed & 0x0F;
                         val = prev_val - low;
                         prev_val = val;
-                        if (val > 0) accumulate_reflection((int)val - 1, me.gx, me.gy, me.z, me.nvx, me.nvy, me.nvz, grid, hourly_data, R);
+                        if (val > 0) accumulate_reflection((int)val - 1, me.gx, me.gy, me.z, me.nvx, me.nvy, me.nvz, grid, hourly_data, pix_parent, wall_z, slopes, aspects, R);
                         ++i;
                     }
                 }
@@ -173,7 +185,7 @@ __global__ void calc_kernel_reflection_compressed(
                     unsigned int val = first ? delta : (prev_val - delta);
                     first = false;
                     prev_val = val;
-                    if (val > 0) accumulate_reflection((int)val - 1, me.gx, me.gy, me.z, me.nvx, me.nvy, me.nvz, grid, hourly_data, R);
+                    if (val > 0) accumulate_reflection((int)val - 1, me.gx, me.gy, me.z, me.nvx, me.nvy, me.nvz, grid, hourly_data, pix_parent, wall_z, slopes, aspects, R);
                 }
             }
         }

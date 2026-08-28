@@ -36,6 +36,7 @@ namespace solar_gpu {
 template <typename ConsumeChunk>
 grid_s_type* run_viewshed_out_of_core(
     const float* grid_d, const int* pix_parent_d, const float* wall_z_d,
+    const int* wall_start_d, const int* wall_count_d,
     int num_total, const SkyBins& bins, ConsumeChunk&& consume_chunk)
 {
     size_t svf_bytes = (size_t)bins.hgrid_size_s * num_total * sizeof(grid_s_type);
@@ -80,7 +81,7 @@ grid_s_type* run_viewshed_out_of_core(
                 if (len > 0.0f) { Cdir.x /= len; Cdir.y /= len; Cdir.z /= len; }
 
                 calc_kernel_hemispherical_viewshed_GPU<<<gridSizeChunk, kBlockSize>>>(
-                    Cdir, grid_d, pix_parent_d, wall_z_d, grid_s_d,
+                    Cdir, grid_d, pix_parent_d, wall_z_d, wall_start_d, wall_count_d, grid_s_d,
                     neighbor_ids_raw_d, init_max_neighbors, dense_svf_idx,
                     is_upper, voxel_offset, chunk_count);
                 cudaCheckError(); cudaDeviceSynchronize();

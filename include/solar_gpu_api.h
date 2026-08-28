@@ -23,7 +23,12 @@ namespace solar_gpu {
                         indices [num_top_voxels, num_total_voxels)
      pixel_parent       per-voxel index of the top pixel it belongs to (size num_total_voxels)
      wall_z             per-wall-voxel height (size num_total_voxels - num_top_voxels)
+     wall_start,
+     wall_count         per-grid-cell first wall-voxel index (into the wall range)
+                        and wall-voxel count of that column (size num_top_voxels
+                        each; wall_start is only meaningful where wall_count > 0)
      max_height         max height anywhere in the grid (viewshed ray termination bound)
+     voxel_size         wall voxel height, map units (facade voxel lookup in the viewshed)
      sun_positions      (azimuth_deg, altitude_deg) for every hour of the year (kHoursPerYear entries)
      direct_irradiance,
      diffuse_irradiance TMY direct/diffuse irradiance, W/m^2, one value per hour (kHoursPerYear entries)
@@ -36,7 +41,9 @@ namespace solar_gpu {
    neighbor list as a CSR-compact array (flat ids + per-voxel offsets). */
 int uncompressed_gpu_irradiance(const float* grid_data, int grid_width, int grid_height,
     int num_total_voxels, int num_top_voxels,
-    const int* pixel_parent, const float* wall_z, float max_height,
+    const int* pixel_parent, const float* wall_z,
+    const int* wall_start, const int* wall_count,
+    float max_height, float voxel_size,
     const std::vector<SunSample>& sun_positions,
     const std::vector<float>& direct_irradiance, const std::vector<float>& diffuse_irradiance,
     const float* slopes, const float* aspects, float* irradiance_out);
@@ -48,7 +55,9 @@ int uncompressed_gpu_irradiance(const float* grid_data, int grid_width, int grid
    uncompressed_gpu_irradiance() up to floating point rounding. */
 int compressed_gpu_irradiance(const float* grid_data, int grid_width, int grid_height,
     int num_total_voxels, int num_top_voxels,
-    const int* pixel_parent, const float* wall_z, float max_height,
+    const int* pixel_parent, const float* wall_z,
+    const int* wall_start, const int* wall_count,
+    float max_height, float voxel_size,
     const std::vector<SunSample>& sun_positions,
     const std::vector<float>& direct_irradiance, const std::vector<float>& diffuse_irradiance,
     const float* slopes, const float* aspects, float* irradiance_out);

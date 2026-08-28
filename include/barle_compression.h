@@ -5,7 +5,7 @@
    in lock-step with the encoding here if this ever changes.
 
    The scheme, per voxel:
-     1. Collect that voxel's neighbor ids (grid indices + 1; 0 = unused slot).
+     1. Collect that voxel's neighbor ids (global voxel ids + 1; 0 = unused slot).
      2. Sort descending, dedupe, delta-encode consecutive values.
      3. Classify each delta by the minimum byte width (4-bit/8/16/24/32) that
         holds it, and run-length-encode consecutive same-width deltas.
@@ -45,7 +45,7 @@ constexpr Byte kEndOfVoxel = 7;
 
 /* Compresses one voxel's neighbor id list.
 
-   `raw` holds up to `max_neighbors` ids, zero-terminated (grid cell index +
+   `raw` holds up to `max_neighbors` ids, zero-terminated (global voxel id +
    1; 0 marks the end of the list, since 0 isn't a valid 1-based id).
    `out_raw_bytes` receives the equivalent uncompressed size (id count * 4)
    for computing compression ratios. */

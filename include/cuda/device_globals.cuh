@@ -28,6 +28,8 @@ extern __constant__ float        vres;         // vertical bin size, degrees
 
 extern __constant__ float maxz; // max heightmap value; bounds upward viewshed rays
 
+extern __constant__ float voxel_size; // wall voxel height, map units; maps a hit height to a facade voxel
+
 extern __constant__ float F_matrix[6][8];
 
 extern __device__ float2 sun_azm_alt[solar_gpu::kHoursPerYear];    // (azimuth, altitude), degrees
@@ -41,7 +43,7 @@ namespace solar_gpu {
    device_globals.cu (the same translation unit the symbols themselves are
    defined in), shared by both GPU pipeline instances. */
 void upload_pipeline_constants(int h_grid_width, int h_grid_height, int h_num_top, int h_num_total,
-                                float h_max_height, const SkyBins& bins,
+                                float h_max_height, float h_voxel_size, const SkyBins& bins,
                                 const std::vector<float>& direct_irradiance,
                                 const std::vector<float>& diffuse_irradiance);
 

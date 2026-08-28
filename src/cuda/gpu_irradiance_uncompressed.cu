@@ -24,7 +24,9 @@ namespace solar_gpu {
 
 int uncompressed_gpu_irradiance(const float* grid_data, int h_grid_width, int h_grid_height,
     int num_total, int num_top_voxels,
-    const int* pixel_parent, const float* wall_z_host, float max_height,
+    const int* pixel_parent, const float* wall_z_host,
+    const int* wall_start_host, const int* wall_count_host,
+    float max_height, float h_voxel_size,
     const std::vector<SunSample>& sun_positions,
     const std::vector<float>& direct_irradiance, const std::vector<float>& diffuse_irradiance,
     const float* slopes, const float* aspects, float* irradiance_out)
@@ -46,12 +48,13 @@ int uncompressed_gpu_irradiance(const float* grid_data, int h_grid_width, int h_
     std::cout << "[*] Sun visits " << bins.active_bin_count << " / " << (bins.h_hsize * bins.h_vsize)
         << " upper hemisphere bins (" << (100.0f * bins.active_bin_count / (bins.h_hsize * bins.h_vsize)) << "%)\n";
 
-    upload_pipeline_constants(h_grid_width, h_grid_height, num_top_voxels, num_total, max_height, bins,
+    upload_pipeline_constants(h_grid_width, h_grid_height, num_top_voxels, num_total, max_height, h_voxel_size, bins,
                                direct_irradiance, diffuse_irradiance);
 
     // ---- device allocations ----
     float* grid_d = nullptr; float* slopes_d = nullptr; float* aspects_d = nullptr;
     int* pix_parent_d = nullptr; float* wall_z_d = nullptr;
+    int* wall_start_d = nullptr; int* wall_count_d = nullptr;
     float* irradiance_d = nullptr; float* hourly_d = nullptr; float* reflected_d = nullptr;
 
     cudaSafeCall(cudaMalloc((void**)&grid_d, (size_t)num_grid_cells * sizeof(float)));
@@ -62,6 +65,10 @@ int uncompressed_gpu_irradiance(const float* grid_data, int h_grid_width, int h_
         cudaSafeCall(cudaMalloc((void**)&wall_z_d, (size_t)num_walls * sizeof(float)));
         cudaSafeCall(cudaMemcpy(wall_z_d, wall_z_host, (size_t)num_walls * sizeof(float), cudaMemcpyHostToDevice));
     }
+    cudaSafeCall(cudaMalloc((void**)&wall_start_d, (size_t)num_grid_cells * sizeof(int)));
+    cudaSafeCall(cudaMalloc((void**)&wall_count_d, (size_t)num_grid_cells * sizeof(int)));
+    cudaSafeCall(cudaMemcpy(wall_start_d, wall_start_host, (size_t)num_grid_cells * sizeof(int), cudaMemcpyHostToDevice));
+    cudaSafeCall(cudaMemcpy(wall_count_d, wall_count_host, (size_t)num_grid_cells * sizeof(int), cudaMemcpyHostToDevice));
     cudaSafeCall(cudaMalloc((void**)&irradiance_d, (size_t)num_total * sizeof(float)));
     cudaSafeCall(cudaMemset(irradiance_d, 0, (size_t)num_total * sizeof(float)));
     cudaSafeCall(cudaMalloc((void**)&hourly_d, (size_t)num_total * sizeof(float)));
@@ -80,7 +87,7 @@ int uncompressed_gpu_irradiance(const float* grid_data, int h_grid_width, int h_
     std::vector<int> nb_flat;
 
     grid_s_type* grid_s_d = run_viewshed_out_of_core(
-        grid_d, pix_parent_d, wall_z_d, num_total, bins,
+        grid_d, pix_parent_d, wall_z_d, wall_start_d, wall_count_d, num_total, bins,
         [&](int voxel_offset, int chunk_count, int trimmed_max, const std::vector<int>& chunk_raw) {
             for (int i = 0; i < chunk_count; ++i) {
                 nb_offsets[voxel_offset + i] = (int)nb_flat.size();
@@ -142,6 +149,8 @@ int uncompressed_gpu_irradiance(const float* grid_data, int h_grid_width, int h_
     cudaSafeCall(cudaFree(aspects_d));
     cudaSafeCall(cudaFree(pix_parent_d));
     if (wall_z_d) cudaSafeCall(cudaFree(wall_z_d));
+    cudaSafeCall(cudaFree(wall_start_d));
+    cudaSafeCall(cudaFree(wall_count_d));
     cudaSafeCall(cudaFree(grid_s_d));
     cudaSafeCall(cudaFree(irradiance_d));
     cudaSafeCall(cudaFree(hourly_d));

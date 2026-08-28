@@ -126,19 +126,31 @@ int main(int argc, char* argv[]) {
         wall_z[i] = walls[i].z;
     }
 
+    /* Per-column lookup into the wall range, so the viewshed can resolve a
+       hit height to the exact facade voxel. Contiguity per column holds
+       because detect_wall_voxels() walks columns in raster order. */
+    std::vector<int> wall_start(numTop, 0), wall_count(numTop, 0);
+    for (int i = 0; i < numWalls; ++i) {
+        int col = walls[i].parentIdx;
+        if (wall_count[col] == 0) wall_start[col] = i;
+        ++wall_count[col];
+    }
+
     // ---- shadowing + reflection on the GPU: both pipeline instances ----
     std::vector<float> irradiance_uncompressed(numTotal);
     std::vector<float> irradiance_compressed(numTotal);
 
     std::cout << "\n=== Uncompressed (CSR) pipeline ===\n";
     uncompressed_gpu_irradiance(grid.heights.data(), grid.width, grid.height, numTotal, numTop,
-        pixel_parent.data(), wall_z.empty() ? nullptr : wall_z.data(), host_maxz,
+        pixel_parent.data(), wall_z.empty() ? nullptr : wall_z.data(),
+        wall_start.data(), wall_count.data(), host_maxz, voxelSize,
         sunAzAl, direct_irrad, diffuse_irrad,
         all_slopes.data(), all_aspects.data(), irradiance_uncompressed.data());
 
     std::cout << "\n=== Compressed (ba-RLE) pipeline ===\n";
     compressed_gpu_irradiance(grid.heights.data(), grid.width, grid.height, numTotal, numTop,
-        pixel_parent.data(), wall_z.empty() ? nullptr : wall_z.data(), host_maxz,
+        pixel_parent.data(), wall_z.empty() ? nullptr : wall_z.data(),
+        wall_start.data(), wall_count.data(), host_maxz, voxelSize,
         sunAzAl, direct_irrad, diffuse_irrad,
         all_slopes.data(), all_aspects.data(), irradiance_compressed.data());
 

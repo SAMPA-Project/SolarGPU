@@ -15,13 +15,17 @@
 /* Traces one ray direction (Cdir) from every voxel in
    [voxel_offset, voxel_offset + chunk_count) outward using a 2D DDA over the
    heightmap (the voxel's origin is offset 2 grid cells along Cdir first, to
-   avoid immediately self-intersecting its own column) and records the first
-   taller cell it hits as a neighbor candidate.
+   avoid immediately self-intersecting its own column) and records the voxel
+   it hits as a neighbor candidate: the facade (wall) voxel of the hit column
+   covering the ray's height at the hit, or the column's top cell if that
+   column has no walls. Stored ids are *global* voxel ids + 1.
 
    `pix_parent`, `wall_z`, and `grid_s` are indexed by *global* voxel id
    (voxel_offset + local thread id) since they cover every voxel in the
-   grid; `neighbor_ids` is indexed by *local* thread id since it's a
-   chunk-sized scratch buffer, freed and reallocated for the next chunk.
+   grid; `wall_start`/`wall_count` are indexed by grid cell and locate a
+   column's contiguous run of wall voxels; `neighbor_ids` is indexed by
+   *local* thread id since it's a chunk-sized scratch buffer, freed and
+   reallocated for the next chunk.
 
    dense_svf_idx >= 0: this direction is a sun-visited upper-hemisphere bin;
                        set the corresponding SVF bit if the ray is unobstructed.
@@ -31,6 +35,7 @@
 __global__ void calc_kernel_hemispherical_viewshed_GPU(
     const float3 Cdir, const float* __restrict__ grid,
     const int* __restrict__ pix_parent, const float* __restrict__ wall_z,
+    const int* __restrict__ wall_start, const int* __restrict__ wall_count,
     solar_gpu::grid_s_type* __restrict__ grid_s,
     int* __restrict__ neighbor_ids, int max_neighbors,
     int dense_svf_idx, int is_upper,

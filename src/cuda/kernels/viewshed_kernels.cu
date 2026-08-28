@@ -7,6 +7,7 @@ using solar_gpu::set_svf_bit;
 __global__ void calc_kernel_hemispherical_viewshed_GPU(
     const float3 Cdir, const float* __restrict__ grid,
     const int* __restrict__ pix_parent, const float* __restrict__ wall_z,
+    const int* __restrict__ wall_start, const int* __restrict__ wall_count,
     grid_s_type* __restrict__ grid_s,
     int* __restrict__ neighbor_ids, int max_neighbors,
     const int dense_svf_idx,
@@ -42,11 +43,25 @@ __global__ void calc_kernel_hemispherical_viewshed_GPU(
         if (is_upper && (oz + Cdir.z * t > maxz)) break;
         if (!is_upper && (oz + Cdir.z * t < 0.0f)) break;
 
-        if (grid[ix + iy * grid_width] - (oz + Cdir.z * t) > 0.01f) {
+        float z_hit = oz + Cdir.z * t;
+        if (grid[ix + iy * grid_width] - z_hit > 0.01f) {
             if (dense_svf_idx >= 0)
                 set_svf_bit((size_t)t_id, (size_t)dense_svf_idx, grid_s, num_data);
 
-            int hit_val = ix + iy * grid_width + 1;
+            /* Resolve which voxel of the hit column the ray actually struck:
+               the facade voxel covering z_hit if the column has walls, its
+               top cell (whose global id equals the raster index) otherwise.
+               Stored value is a global voxel id + 1 (0 = unused slot). */
+            int col = ix + iy * grid_width;
+            int hit_val;
+            int n_wv = wall_count[col];
+            if (n_wv > 0) {
+                int wv = __float2int_rd((grid[col] - z_hit) / voxel_size);
+                wv = min(max(wv, 0), n_wv - 1);
+                hit_val = num_top + wall_start[col] + wv + 1;
+            } else {
+                hit_val = col + 1;
+            }
             size_t base = (size_t)local_id * max_neighbors; // chunk-local buffer
             for (int k = 0; k < max_neighbors; ++k) {
                 int existing = neighbor_ids[base + k];

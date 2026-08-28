@@ -42,8 +42,8 @@ cmake --build . -j
 - `[lon]`: longitude
 - `[lat]`: latitude
 - `[tzone]`: timezone
-- `[direct.txt]`: Hourly TMY time-serises of direct irradiance
-- `[diffuse.txt]`: Hourly TMY time-serises of diffuse irradiance
+- `[direct.txt]`: Hourly TMY time-serises of horizontal direct irradiance
+- `[diffuse.txt]`: Hourly TMY time-serises of horizontal diffuse irradiance
 
 ## Outputs
 

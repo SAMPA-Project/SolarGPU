@@ -68,8 +68,13 @@ __global__ void calc_kernel_solar(grid_s_type* grid_s, float* hourly_data,
     float cos_aoi =  cos_z_angle * cosf(slope) + sinf(acosf(cos_z_angle)) * sinf(slope) * cosf(sun_azm_alt[ind].x * solar_gpu::kDegToRad - aspect);
     float I = 0.0f;
 
+    /* direct_ir is direct *horizontal* irradiance: divide by cos(zenith) to
+       recover beam-normal before projecting onto the surface (same convention
+       as the Perez sky-clearness term above). Clamped to zenith <= ~85 deg so
+       the division stays bounded near the horizon. */
+    float cos_z_clamped = fmaxf(cos_z_angle, 0.08715574f);
     if (cos_aoi > 0.0f && di >= 0 && !get_svf_bit((size_t)t_id, (size_t)di, grid_s, num_data))
-        I += fmaxf(0.0f, fmaxf(direct_ir[ind], 1e-3f) * (cos_aoi));
+        I += fmaxf(0.0f, fmaxf(direct_ir[ind], 1e-3f) * (cos_aoi / cos_z_clamped));
   
     I += fmaxf(0.0f, Perez(cos_z_angle, cos_aoi, diffuse_ir[ind], direct_ir[ind], slope, n));
         

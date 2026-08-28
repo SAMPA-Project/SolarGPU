@@ -13,7 +13,7 @@ __global__ void calc_kernel_reflection_csr(
     const float* __restrict__ hourly_data, const float* __restrict__ grid,
     const float* __restrict__ slopes, const float* __restrict__ aspects,
     const int* __restrict__ pix_parent, const float* __restrict__ wall_z,
-    const int* __restrict__ nb_flat, const int* __restrict__ nb_offsets,
+    const int* __restrict__ nb_flat, const long long* __restrict__ nb_offsets,
     float* __restrict__ reflected_out, int total_pixels);
 
 /* ---- ba-RLE compressed stream (the "compressed" pipeline instance) ----
@@ -24,5 +24,5 @@ __global__ void calc_kernel_reflection_compressed(
     const float* __restrict__ hourly_data, const float* __restrict__ grid,
     const float* __restrict__ slopes, const float* __restrict__ aspects,
     const int* __restrict__ pix_parent, const float* __restrict__ wall_z,
-    const unsigned char* __restrict__ comp_data, const int* __restrict__ comp_offsets,
+    const unsigned char* __restrict__ comp_data, const long long* __restrict__ comp_offsets,
     float* __restrict__ reflected_out, int total_pixels);

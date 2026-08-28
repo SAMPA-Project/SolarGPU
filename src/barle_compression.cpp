@@ -187,11 +187,11 @@ std::vector<Byte> compress_voxel_neighbors(const int* raw, int max_neighbors, in
 }
 
 void compress_all_neighbors(const int* raw_host, int num_total, int max_neighbors,
-                             std::vector<int>& offsets, std::vector<Byte>& flat_data,
+                             std::vector<long long>& offsets, std::vector<Byte>& flat_data,
                              std::size_t& out_raw_bytes) {
     offsets.resize(num_total + 1);
     flat_data.clear();
-    int offset = 0;
+    long long offset = 0;
     out_raw_bytes = 0;
 
     for (int i = 0; i < num_total; ++i) {
@@ -201,7 +201,7 @@ void compress_all_neighbors(const int* raw_host, int num_total, int max_neighbor
             compress_voxel_neighbors(raw_host + (size_t)i * max_neighbors, max_neighbors, rawBytes);
         out_raw_bytes += (size_t)rawBytes;
         flat_data.insert(flat_data.end(), compressed.begin(), compressed.end());
-        offset += (int)compressed.size();
+        offset += (long long)compressed.size();
     }
     offsets[num_total] = offset;
 }

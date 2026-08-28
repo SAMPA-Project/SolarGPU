@@ -85,35 +85,35 @@ int compressed_gpu_irradiance(const float* grid_data, int h_grid_width, int h_gr
     std::cout << "[1] Computing viewshed + neighbors (ba-RLE compressed)\n";
     auto t_stage1 = std::chrono::high_resolution_clock::now();
 
-    std::vector<int> comp_offsets(num_total + 1, 0);
+    std::vector<long long> comp_offsets(num_total + 1, 0);
     std::vector<barle::Byte> comp_flat;
     size_t total_raw_bytes = 0;
 
     grid_s_type* grid_s_d = run_viewshed_out_of_core(
         grid_d, pix_parent_d, wall_z_d, wall_start_d, wall_count_d, num_total, bins,
         [&](int voxel_offset, int chunk_count, int trimmed_max, const std::vector<int>& chunk_raw) {
-            std::vector<int> chunk_offsets;
+            std::vector<long long> chunk_offsets;
             std::vector<barle::Byte> chunk_flat;
             size_t chunk_raw_bytes = 0;
             barle::compress_all_neighbors(chunk_raw.data(), chunk_count, trimmed_max,
                                            chunk_offsets, chunk_flat, chunk_raw_bytes);
 
-            int base_offset = (int)comp_flat.size();
+            long long base_offset = (long long)comp_flat.size();
             for (int i = 0; i < chunk_count; ++i)
                 comp_offsets[voxel_offset + i] = base_offset + chunk_offsets[i];
             comp_flat.insert(comp_flat.end(), chunk_flat.begin(), chunk_flat.end());
             total_raw_bytes += chunk_raw_bytes;
         });
-    comp_offsets[num_total] = (int)comp_flat.size();
+    comp_offsets[num_total] = (long long)comp_flat.size();
 
     std::cout << std::fixed << "  Compression ratio: " << comp_flat.size() / 1024.0 << " KB from "
         << total_raw_bytes / 1024.0 << " KB ("
         << (100.0 * comp_flat.size() / std::max<size_t>(total_raw_bytes, 1)) << "%)\n";
     std::cout << "  [TIME] Viewshed + compression: " << elapsed_ms(t_stage1) << " ms\n";
 
-    unsigned char* comp_data_d = nullptr; int* comp_offsets_d = nullptr;
-    cudaSafeCall(cudaMalloc((void**)&comp_offsets_d, (size_t)(num_total + 1) * sizeof(int)));
-    cudaSafeCall(cudaMemcpy(comp_offsets_d, comp_offsets.data(), (size_t)(num_total + 1) * sizeof(int), cudaMemcpyHostToDevice));
+    unsigned char* comp_data_d = nullptr; long long* comp_offsets_d = nullptr;
+    cudaSafeCall(cudaMalloc((void**)&comp_offsets_d, (size_t)(num_total + 1) * sizeof(long long)));
+    cudaSafeCall(cudaMemcpy(comp_offsets_d, comp_offsets.data(), (size_t)(num_total + 1) * sizeof(long long), cudaMemcpyHostToDevice));
     if (!comp_flat.empty()) {
         cudaSafeCall(cudaMalloc((void**)&comp_data_d, comp_flat.size()));
         cudaSafeCall(cudaMemcpy(comp_data_d, comp_flat.data(), comp_flat.size(), cudaMemcpyHostToDevice));

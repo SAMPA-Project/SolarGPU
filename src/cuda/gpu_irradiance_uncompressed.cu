@@ -83,14 +83,14 @@ int uncompressed_gpu_irradiance(const float* grid_data, int h_grid_width, int h_
     std::cout << "[1] Computing viewshed + neighbors (CSR)\n";
     auto t_stage1 = std::chrono::high_resolution_clock::now();
 
-    std::vector<int> nb_offsets(num_total + 1, 0);
+    std::vector<long long> nb_offsets(num_total + 1, 0);
     std::vector<int> nb_flat;
 
     grid_s_type* grid_s_d = run_viewshed_out_of_core(
         grid_d, pix_parent_d, wall_z_d, wall_start_d, wall_count_d, num_total, bins,
         [&](int voxel_offset, int chunk_count, int trimmed_max, const std::vector<int>& chunk_raw) {
             for (int i = 0; i < chunk_count; ++i) {
-                nb_offsets[voxel_offset + i] = (int)nb_flat.size();
+                nb_offsets[voxel_offset + i] = (long long)nb_flat.size();
                 size_t base = (size_t)i * trimmed_max;
                 for (int k = 0; k < trimmed_max; ++k) {
                     int v = chunk_raw[base + k];
@@ -99,12 +99,12 @@ int uncompressed_gpu_irradiance(const float* grid_data, int h_grid_width, int h_
                 }
             }
         });
-    nb_offsets[num_total] = (int)nb_flat.size();
+    nb_offsets[num_total] = (long long)nb_flat.size();
     std::cout << "  [TIME] Viewshed: " << elapsed_ms(t_stage1) << " ms (" << nb_flat.size() << " total neighbors)\n";
 
-    int* nb_offsets_d = nullptr; int* nb_flat_d = nullptr;
-    cudaSafeCall(cudaMalloc((void**)&nb_offsets_d, (size_t)(num_total + 1) * sizeof(int)));
-    cudaSafeCall(cudaMemcpy(nb_offsets_d, nb_offsets.data(), (size_t)(num_total + 1) * sizeof(int), cudaMemcpyHostToDevice));
+    long long* nb_offsets_d = nullptr; int* nb_flat_d = nullptr;
+    cudaSafeCall(cudaMalloc((void**)&nb_offsets_d, (size_t)(num_total + 1) * sizeof(long long)));
+    cudaSafeCall(cudaMemcpy(nb_offsets_d, nb_offsets.data(), (size_t)(num_total + 1) * sizeof(long long), cudaMemcpyHostToDevice));
     if (!nb_flat.empty()) {
         cudaSafeCall(cudaMalloc((void**)&nb_flat_d, nb_flat.size() * sizeof(int)));
         cudaSafeCall(cudaMemcpy(nb_flat_d, nb_flat.data(), nb_flat.size() * sizeof(int), cudaMemcpyHostToDevice));

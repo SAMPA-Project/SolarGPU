@@ -83,7 +83,7 @@ __global__ void calc_kernel_reflection_csr(
     const float* __restrict__ hourly_data, const float* __restrict__ grid,
     const float* __restrict__ slopes, const float* __restrict__ aspects,
     const int* __restrict__ pix_parent, const float* __restrict__ wall_z,
-    const int* __restrict__ nb_flat, const int* __restrict__ nb_offsets,
+    const int* __restrict__ nb_flat, const long long* __restrict__ nb_offsets,
     float* __restrict__ reflected_out, int total_pixels)
 {
     const int t_id = blockIdx.x * blockDim.x + threadIdx.x;
@@ -92,9 +92,9 @@ __global__ void calc_kernel_reflection_csr(
     ReceiverVoxel me = receiver_voxel(t_id, pix_parent, wall_z, grid, slopes, aspects);
 
     float R = 0.0f;
-    int start = nb_offsets[t_id];
-    int end = nb_offsets[t_id + 1];
-    for (int k = start; k < end; ++k) {
+    long long start = nb_offsets[t_id];
+    long long end = nb_offsets[t_id + 1];
+    for (long long k = start; k < end; ++k) {
         accumulate_reflection(nb_flat[k] - 1, me.gx, me.gy, me.z, me.nvx, me.nvy, me.nvz, grid, hourly_data, pix_parent, wall_z, slopes, aspects, R);
     }
     reflected_out[t_id] = R;
@@ -104,7 +104,7 @@ __global__ void calc_kernel_reflection_csr(
 
 namespace {
 
-__device__ __forceinline__ unsigned int read_bytes_be(const unsigned char* data, int& idx, int nBytes) {
+__device__ __forceinline__ unsigned int read_bytes_be(const unsigned char* data, long long& idx, int nBytes) {
     unsigned int v = 0;
     for (int i = 0; i < nBytes; ++i) { v <<= 8; v |= data[idx++]; }
     return v;
@@ -116,7 +116,7 @@ __global__ void calc_kernel_reflection_compressed(
     const float* __restrict__ hourly_data, const float* __restrict__ grid,
     const float* __restrict__ slopes, const float* __restrict__ aspects,
     const int* __restrict__ pix_parent, const float* __restrict__ wall_z,
-    const unsigned char* __restrict__ comp_data, const int* __restrict__ comp_offsets,
+    const unsigned char* __restrict__ comp_data, const long long* __restrict__ comp_offsets,
     float* __restrict__ reflected_out, int total_pixels)
 {
     const int t_id = blockIdx.x * blockDim.x + threadIdx.x;
@@ -126,11 +126,11 @@ __global__ void calc_kernel_reflection_compressed(
 
     float R = 0.0f;
 
-    int start = comp_offsets[t_id];
-    int end = comp_offsets[t_id + 1];
+    long long start = comp_offsets[t_id];
+    long long end = comp_offsets[t_id + 1];
     const unsigned char* data = comp_data + start;
-    int size = end - start;
-    int idx = 0;
+    long long size = end - start;
+    long long idx = 0;
 
     unsigned int prev_val = 0;
     bool first = true;

@@ -56,7 +56,7 @@ std::vector<Byte> compress_voxel_neighbors(const int* raw, int max_neighbors, in
    (offsets has num_total + 1 entries). out_raw_bytes accumulates the
    uncompressed-equivalent size across all voxels. */
 void compress_all_neighbors(const int* raw_host, int num_total, int max_neighbors,
-                             std::vector<int>& offsets, std::vector<Byte>& flat_data,
+                             std::vector<long long>& offsets, std::vector<Byte>& flat_data,
                              std::size_t& out_raw_bytes);
 
 } // namespace solar_gpu::barle

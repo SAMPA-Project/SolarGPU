@@ -1,7 +1,5 @@
 # SolarGPU
 
-This implementation is supplementary material for the paper *GPU-based solar irradiance estimation over Digital Surface Models using structurally lossless viewshed compression* by Niko Lukač and Borut Žalik, University of Maribor. 
-
 **Version: 1.0**
 
 ## Description
@@ -38,10 +36,10 @@ cmake --build . -j
 ./SolarGPU <dsm.tiff> <lon> <lat> <tzone> <direct.txt> <diffuse.txt>
 ```
 
-- `[dsm.tiff]`: DSM's heightmap (float32 format)
+- `[dsm.tiff]`: DSM's heightmap (float32 GeoTIFF)
 - `[lon]`: longitude
 - `[lat]`: latitude
-- `[tzone]`: timezone
+- `[tzone]`: timezone, given as the UTC offset in hours
 - `[direct.txt]`: Hourly TMY time-serises of horizontal direct irradiance
 - `[diffuse.txt]`: Hourly TMY time-serises of horizontal diffuse irradiance
 
@@ -50,3 +48,13 @@ cmake --build . -j
 - `<file>_solar_potential.tiff`: annual irradiance raster
 - `<file>_voxels.bin`: per-voxel (grid_x, grid_y, z, annual_irradiance)
   point dump
+
+## Citation
+
+This implementation is supplementary material for the paper *GPU-Based Solar Irradiance Estimation over Digital Surface Models Using Structurally Lossless Viewshed Compression* by Niko Lukač and Borut Žalik, University of Maribor.
+
+If you use this software in your research, please cite both of the following papers:
+
+1. Lukač N, Žalik B. GPU-Based Solar Irradiance Estimation over Digital Surface Models Using Structurally Lossless Viewshed Compression. Remote Sensing. 2026; 18(17):3044. https://doi.org/10.3390/rs18173044
+2. Lukač N, Mongus D, Žalik B, Štumberger G, Bizjak M. Novel GPU-accelerated high-resolution solar potential estimation in urban areas by using a modified diffuse irradiance model. Applied Energy. 2024; 353:122129. https://doi.org/10.1016/j.apenergy.2023.122129
+

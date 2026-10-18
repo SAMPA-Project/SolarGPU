@@ -57,4 +57,4 @@ If you use this software in your research, please cite both of the following pap
 
 1. Lukač N, Žalik B. GPU-Based Solar Irradiance Estimation over Digital Surface Models Using Structurally Lossless Viewshed Compression. Remote Sensing. 2026; 18(17):3044. https://doi.org/10.3390/rs18173044
 2. Lukač N, Mongus D, Žalik B, Štumberger G, Bizjak M. Novel GPU-accelerated high-resolution solar potential estimation in urban areas by using a modified diffuse irradiance model. Applied Energy. 2024; 353:122129. https://doi.org/10.1016/j.apenergy.2023.122129
-
+3. Lukač, N., Žlaus, D., Seme, S., Žalik, B., & Štumberger, G. (2013). Rating of roofs’ surfaces regarding their solar potential and suitability for PV systems, based on LiDAR data. Applied energy, 102, 803-812.

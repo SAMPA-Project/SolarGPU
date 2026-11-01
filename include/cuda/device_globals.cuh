@@ -28,7 +28,7 @@ extern __constant__ float        vres;         // vertical bin size, degrees
 
 extern __constant__ float maxz; // max heightmap value; bounds upward viewshed rays
 
-extern __constant__ float voxel_size; // wall voxel height, map units; maps a hit height to a facade voxel
+extern __constant__ float voxel_size; // pixel size = wall voxel height, map units; scales ray heights and maps a hit height to a facade voxel
 
 extern __constant__ float F_matrix[6][8];
 

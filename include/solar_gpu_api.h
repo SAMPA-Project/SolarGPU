@@ -28,7 +28,7 @@ namespace solar_gpu {
                         and wall-voxel count of that column (size num_top_voxels
                         each; wall_start is only meaningful where wall_count > 0)
      max_height         max height anywhere in the grid (viewshed ray termination bound)
-     voxel_size         wall voxel height, map units (facade voxel lookup in the viewshed)
+     voxel_size         pixel size = wall voxel height, map units (ray height step and facade voxel lookup in the viewshed)
      sun_positions      (azimuth_deg, altitude_deg) for every hour of the year (kHoursPerYear entries)
      direct_irradiance,
      diffuse_irradiance TMY direct/diffuse irradiance, W/m^2, one value per hour (kHoursPerYear entries)

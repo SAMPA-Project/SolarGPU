@@ -69,13 +69,13 @@ std::vector<float> read_tiff(const std::string& path, TiffMeta& meta) {
         double* pixelScale = nullptr; uint16_t pixelScaleCount = 0;
         uint16_t* geoKeys = nullptr; uint16_t geoKeyCount = 0;
         double* geoDoubles = nullptr; uint16_t geoDoubleCount = 0;
-        char* geoAscii = nullptr; uint16_t geoAsciiCount = 0;
+        char* geoAscii = nullptr;
 
         TIFFGetField(tif, 33922, &tiepointCount, &tiepoints);
         TIFFGetField(tif, 33550, &pixelScaleCount, &pixelScale);
         TIFFGetField(tif, 34735, &geoKeyCount, &geoKeys);
         TIFFGetField(tif, 34736, &geoDoubleCount, &geoDoubles);
-        TIFFGetField(tif, 34737, &geoAsciiCount, &geoAscii);
+        TIFFGetField(tif, 34737, &geoAscii); // registered without a count (passcount 0)
 
         if (tiepoints && tiepointCount)
             meta.tiepoints.assign(tiepoints, tiepoints + tiepointCount);
@@ -85,8 +85,8 @@ std::vector<float> read_tiff(const std::string& path, TiffMeta& meta) {
             meta.geoKeys.assign(geoKeys, geoKeys + geoKeyCount);
         if (geoDoubles && geoDoubleCount)
             meta.geoDoubles.assign(geoDoubles, geoDoubles + geoDoubleCount);
-        if (geoAscii && geoAsciiCount)
-            meta.geoAscii.assign(geoAscii, geoAscii + geoAsciiCount);
+        if (geoAscii)
+            meta.geoAscii = geoAscii;
     }
 
     if (meta.bitsPerSample != 32 || meta.sampleFormat != SAMPLEFORMAT_IEEEFP) {
@@ -165,7 +165,7 @@ void write_tiff(const std::string& path, const std::vector<float>& data, const T
     if (!meta.geoDoubles.empty())
         TIFFSetField(tif, 34736, (uint16_t)meta.geoDoubles.size(), meta.geoDoubles.data());
     if (!meta.geoAscii.empty())
-        TIFFSetField(tif, 34737, (uint16_t)meta.geoAscii.size(), meta.geoAscii.c_str());
+        TIFFSetField(tif, 34737, meta.geoAscii.c_str());
 
     for (uint32_t row = 0; row < meta.h; ++row) {
         if (TIFFWriteScanline(tif, (void*)(data.data() + (size_t)row * meta.w), row) < 0) {

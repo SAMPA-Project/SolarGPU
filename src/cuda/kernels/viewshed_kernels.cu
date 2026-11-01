@@ -25,9 +25,12 @@ __global__ void calc_kernel_hemispherical_viewshed_GPU(
     if (t_id < num_top) base_z = grid[gx + gy * grid_width];
     else base_z = wall_z[t_id - num_top];
 
+    /* x, y and t are in pixels, heights in map units: scale the vertical
+       step by the pixel size so that rays keep their true elevation angle. */
+    const float dz = Cdir.z * voxel_size;
     const float ox = (float)gx + Cdir.x * 2.0f;
     const float oy = (float)gy + Cdir.y * 2.0f;
-    const float oz = base_z + Cdir.z * 2.0f;
+    const float oz = base_z + dz * 2.0f;
     int ix = __float2int_rd(ox);
     int iy = __float2int_rd(oy);
 
@@ -40,10 +43,10 @@ __global__ void calc_kernel_hemispherical_viewshed_GPU(
         else { t = tMaxY; iy += (Cdir.y >= 0.0f) ? 1 : -1; tMaxY += 1.0f / fmaxf(fabsf(Cdir.y), 1e-8f); }
 
         if ((unsigned)ix >= grid_width || (unsigned)iy >= grid_height) break;
-        if (is_upper && (oz + Cdir.z * t > maxz)) break;
-        if (!is_upper && (oz + Cdir.z * t < 0.0f)) break;
+        if (is_upper && (oz + dz * t > maxz)) break;
+        if (!is_upper && (oz + dz * t < 0.0f)) break;
 
-        float z_hit = oz + Cdir.z * t;
+        float z_hit = oz + dz * t;
         if (grid[ix + iy * grid_width] - z_hit > 0.01f) {
             if (dense_svf_idx >= 0)
                 set_svf_bit((size_t)t_id, (size_t)dense_svf_idx, grid_s, num_data);

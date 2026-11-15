@@ -2,8 +2,8 @@
 
 /* Hourly sun azimuth/altitude for a full (non-leap) year at a fixed
    lon/lat/timezone, via the PSA solar position algorithm (Blanco-Muriel et
-   al., "Computing the solar vector", Solar Energy 80(3), 2006). Accuracy is
-   ~0.01 deg, which is plenty for hourly irradiance over a DSM. */
+   al., "Computing the solar vector", Solar Energy 70(5), 431-441, 2001).
+   Accuracy is ~0.01 deg, which is plenty for hourly irradiance over a DSM. */
 
 #include <cmath>
 #include <ctime>

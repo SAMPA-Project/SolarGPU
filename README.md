@@ -53,8 +53,37 @@ cmake --build . -j
 
 This implementation is supplementary material for the paper *GPU-Based Solar Irradiance Estimation over Digital Surface Models Using Structurally Lossless Viewshed Compression* by Niko Lukač and Borut Žalik, University of Maribor.
 
-If you use this software in your research, please cite both of the following papers:
+If you use this software in your research, please cite the following papers:
 
-1. Lukač N, Žalik B. GPU-Based Solar Irradiance Estimation over Digital Surface Models Using Structurally Lossless Viewshed Compression. Remote Sensing. 2026; 18(17):3044. https://doi.org/10.3390/rs18173044
-2. Lukač N, Mongus D, Žalik B, Štumberger G, Bizjak M. Novel GPU-accelerated high-resolution solar potential estimation in urban areas by using a modified diffuse irradiance model. Applied Energy. 2024; 353:122129. https://doi.org/10.1016/j.apenergy.2023.122129
-3. Lukač, N., Žlaus, D., Seme, S., Žalik, B., & Štumberger, G. (2013). Rating of roofs’ surfaces regarding their solar potential and suitability for PV systems, based on LiDAR data. Applied energy, 102, 803-812.
+```bibtex
+@article{lukac2026viewshed,
+  author  = {Luka{\v{c}}, Niko and {\v{Z}}alik, Borut},
+  title   = {{GPU}-Based Solar Irradiance Estimation over Digital Surface Models Using Structurally Lossless Viewshed Compression},
+  journal = {Remote Sensing},
+  volume  = {18},
+  number  = {17},
+  pages   = {3044},
+  year    = {2026},
+  doi     = {10.3390/rs18173044}
+}
+
+@article{lukac2024diffuse,
+  author  = {Luka{\v{c}}, Niko and Mongus, Domen and {\v{Z}}alik, Borut and {\v{S}}tumberger, Gorazd and Bizjak, Marko},
+  title   = {Novel {GPU}-accelerated high-resolution solar potential estimation in urban areas by using a modified diffuse irradiance model},
+  journal = {Applied Energy},
+  volume  = {353},
+  pages   = {122129},
+  year    = {2024},
+  doi     = {10.1016/j.apenergy.2023.122129}
+}
+
+@article{lukac2013rating,
+  author  = {Luka{\v{c}}, Niko and {\v{Z}}laus, Danijel and Seme, Sebastijan and {\v{Z}}alik, Borut and {\v{S}}tumberger, Gorazd},
+  title   = {Rating of roofs' surfaces regarding their solar potential and suitability for {PV} systems, based on {LiDAR} data},
+  journal = {Applied Energy},
+  volume  = {102},
+  pages   = {803--812},
+  year    = {2013},
+  doi     = {10.1016/j.apenergy.2012.08.042}
+}
+```

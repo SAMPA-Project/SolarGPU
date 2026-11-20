@@ -2,6 +2,10 @@
 
 **Version: 1.0**
 
+![Annual solar potential estimated with SolarGPU on four LiDAR-derived DSMs: Pekre, Vaihingen, Maribor and New York City](docs/solar_potential_four_scenes.png)
+
+*Annual solar potential estimated with SolarGPU on four LiDAR-derived DSMs (Pekre, Vaihingen, Maribor, New York City). Figure 13 of Lukač & Žalik, Remote Sensing 18(17), 3044, 2026 ([doi:10.3390/rs18173044](https://doi.org/10.3390/rs18173044)), CC BY 4.0. The test DSM in `test_data/` is the Pekre scene.*
+
 ## Description
 
 GPU-accelerated annual solar irradiance estimation pipeline over a digital surface model (DSM), with shadowing, diffuse, direct and reflective irradiance. This implementation supports a compact "ba-RLE" compressed representation for the viewshed neighbor lists that the reflection pass streams through each time step.
